@@ -226,7 +226,7 @@ proc processSignedBeaconBlock*(
 
   # Start of block processing - in reality, we have already gone through SSZ
   # decoding at this stage, which may be significant
-  debug "Block received", delay
+  info "Block received", slot=signedBlock.message.slot, blck, blockRoot, delay
 
   let v =
     self.dag.validateBeaconBlock(self.quarantine, signedBlock, wallTime, {})
@@ -289,10 +289,10 @@ proc processSignedBlobSidecar*(
   let delay = wallTime - signedBlobSidecar.message.slot.start_beacon_time
 
   if self.blobQuarantine[].hasBlob(signedBlobSidecar.message):
-    debug "Blob received, already in quarantine", delay
+    info "Blob received, already in quarantine", delay
     return ValidationRes.ok
   else:
-    debug "Blob received", delay
+    info "Blob received", delay
 
   let v =
     self.dag.validateBlobSidecar(self.quarantine, self.blobQuarantine,

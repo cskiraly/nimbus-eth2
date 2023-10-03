@@ -720,7 +720,8 @@ proc storeBlock(
 
   beacon_store_block_duration_seconds.observe(storeBlockDur.toFloatSeconds())
 
-  debug "Block processed",
+  info "Block processed",
+    slot = signedBlock.message.slot,
     head = shortLog(dag.head),
     blck = shortLog(blck.get()),
     validationDur, queueDur, newPayloadDur, addHeadBlockDur, updateHeadDur

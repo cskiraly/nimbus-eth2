@@ -2446,12 +2446,23 @@ proc addValidator*[MsgType](node: Eth2Node,
   proc execValidator(topic: string, message: GossipMsg):
       Future[ValidationResult] {.raises: [].} =
     inc nbc_gossip_messages_received
+    let receiveTime = node.getBeaconTime()
     trace "Validating incoming gossip message", len = message.data.len, topic
 
     var decompressed = snappy.decode(message.data, gossipMaxSize(MsgType))
+    let decompressedTime = node.getBeaconTime()
     let res = if decompressed.len > 0:
       try:
         let decoded = SSZ.decode(decompressed, MsgType)
+        let decodedTime = node.getBeaconTime()
+        when MsgType is ForkySignedBeaconBlock:
+          info "Validating incoming gossip block message",
+            slot = decoded.message.slot,
+            blockRoot = shortLog(decoded.root),
+            receiveDelay = (receiveTime - decoded.message.slot.start_beacon_time).nanoseconds,
+            decompressedDelay = (decompressedTime - decoded.message.slot.start_beacon_time).nanoseconds,
+            decodedDelay = (decodedTime - decoded.message.slot.start_beacon_time).nanoseconds,
+            len = message.data.len, decompressed = decompressed.len, topic
         decompressed = newSeq[byte](0) # release memory before validating
         msgValidator(decoded) # doesn't raise!
       except SerializationError as e:
